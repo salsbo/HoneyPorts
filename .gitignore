@@ -1,0 +1,36 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcworkspace
+xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Certificates and secrets
+*.cer
+*.p12
+*.mobileprovision
+*.provisionprofile
+
+# Build artifacts
+*.dmg
+*.zip
+*.app
+
+# Logs
+*.log
+*.profraw
+
+# Temporary files
+*.swp
+*.swo
+*~
