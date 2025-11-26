@@ -79,6 +79,6 @@ open HoneyPorts.xcodeproj
 
 MIT License - see LICENSE file for details.
 
-## Author / Auteur
+## Authors / Auteurs
 
-Oscar Robert-Besle
+Oscar Robert-Besle & Julien ROBERT
