@@ -2,6 +2,12 @@
 
 A lightweight macOS menu bar honeypot application that monitors network connection attempts on configurable ports.
 
+**The full source code is available in this repository for security audit and review.**
+
+## Download
+
+[Download HoneyPorts-1.0.dmg](https://github.com/salsbo/HoneyPorts/releases/download/v1.0/HoneyPorts-1.0.dmg) (Signed & Notarized by Apple)
+
 ## Features
 
 - **Menu bar application** - Runs discreetly in your menu bar
