@@ -7,6 +7,8 @@ import Foundation
 import Network
 
 class HoneypotListener {
+    private static let maxConnectionsPerPort = 500  // Limite par port pour éviter DoS
+
     private var listener: NWListener?
     let port: Int
     private var isActive = false
@@ -98,12 +100,29 @@ class HoneypotListener {
             listener?.newConnectionHandler = { [weak self] connection in
                 guard let self = self else { return }
 
+                // Vérifier la limite de connexions avant d'accepter
+                var shouldAccept = false
+                self.handlersQueue.sync {
+                    shouldAccept = self.activeHandlers.count < HoneypotListener.maxConnectionsPerPort
+                }
+
+                guard shouldAccept else {
+                    // Refuser la connexion si limite atteinte
+                    connection.cancel()
+                    return
+                }
+
                 let handlerID = UUID()
                 let handler = ConnectionHandler(connection: connection, port: self.port) { [weak self] in
                     self?.removeHandler(id: handlerID)
                 }
 
                 self.handlersQueue.async(flags: .barrier) {
+                    // Double vérification après avoir obtenu le lock
+                    guard self.activeHandlers.count < HoneypotListener.maxConnectionsPerPort else {
+                        connection.cancel()
+                        return
+                    }
                     self.activeHandlers[handlerID] = handler
                 }
 

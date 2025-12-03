@@ -12,6 +12,7 @@ class ConnectionHandler {
     private let startTime: Date
     private let completionHandler: (() -> Void)?
     private var isWhitelisted = false
+    private let whitelistLock = NSLock()  // Protection contre race condition
 
     init(connection: NWConnection, port: Int, completionHandler: (() -> Void)? = nil) {
         self.connection = connection
@@ -27,13 +28,15 @@ class ConnectionHandler {
             switch state {
             case .ready:
                 self.checkWhitelistStatus()
-                if !self.isWhitelisted {
+                if !self.getWhitelistStatus() {
                     self.logEvent(event: "connection_opened", bytesCount: 0, payload: Data())
                 }
                 self.receiveData()
 
             case .failed:
-                self.logEvent(event: "connection_failed", bytesCount: 0, payload: Data())
+                if !self.getWhitelistStatus() {
+                    self.logEvent(event: "connection_failed", bytesCount: 0, payload: Data())
+                }
                 self.connection.cancel()
                 self.completionHandler?()
 
@@ -48,16 +51,32 @@ class ConnectionHandler {
         connection.start(queue: .global(qos: .background))
     }
 
+    /// Accès thread-safe au statut whitelist
+    private func getWhitelistStatus() -> Bool {
+        whitelistLock.lock()
+        defer { whitelistLock.unlock() }
+        return isWhitelisted
+    }
+
+    /// Modification thread-safe du statut whitelist
+    private func setWhitelistStatus(_ value: Bool) {
+        whitelistLock.lock()
+        defer { whitelistLock.unlock() }
+        isWhitelisted = value
+    }
+
     private func receiveData() {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 1024) { [weak self] data, _, isComplete, error in
             guard let self = self else { return }
 
-            if let data = data, !data.isEmpty, !self.isWhitelisted {
+            let whitelisted = self.getWhitelistStatus()
+
+            if let data = data, !data.isEmpty, !whitelisted {
                 self.logEvent(event: "data_received", bytesCount: data.count, payload: data)
             }
 
             if error != nil || isComplete {
-                if !self.isWhitelisted {
+                if !whitelisted {
                     self.logEvent(event: "connection_closed", bytesCount: 0, payload: Data())
                 }
                 self.connection.cancel()
@@ -121,17 +140,27 @@ class ConnectionHandler {
         return "unknown"
     }
 
+    private static let maxDataForParsing = 8192      // 8KB max pour parsing
+    private static let maxUserAgentLength = 256       // 256 chars max pour User-Agent
+
     private func extractUserAgent(from data: Data) -> String? {
-        guard let string = String(data: data, encoding: .utf8) else {
+        // Limiter la taille des données à parser pour éviter buffer overflow
+        let limitedData = data.prefix(ConnectionHandler.maxDataForParsing)
+
+        guard let string = String(data: limitedData, encoding: .utf8) else {
             return nil
         }
 
         let lines = string.components(separatedBy: "\r\n")
         for line in lines {
             if line.lowercased().hasPrefix("user-agent:") {
-                let parts = line.components(separatedBy: ":")
-                if parts.count > 1 {
-                    return parts[1...].joined(separator: ":").trimmingCharacters(in: .whitespaces)
+                // Trouver le premier ":" et extraire le reste
+                if let colonIndex = line.firstIndex(of: ":") {
+                    let afterColon = line.index(after: colonIndex)
+                    let userAgent = String(line[afterColon...])
+                        .trimmingCharacters(in: .whitespaces)
+                    // Limiter la longueur du User-Agent
+                    return String(userAgent.prefix(ConnectionHandler.maxUserAgentLength))
                 }
             }
         }
@@ -153,7 +182,7 @@ class ConnectionHandler {
             }
 
             if IPWhitelist.shared.isWhitelisted(cleanIP) {
-                isWhitelisted = true
+                setWhitelistStatus(true)
             }
         default:
             break

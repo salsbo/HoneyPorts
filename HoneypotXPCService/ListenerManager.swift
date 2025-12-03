@@ -223,15 +223,37 @@ class ListenerManager {
 
 extension ListenerManager: HoneypotXPCProtocol {
     func startListenersOnPortRange(_ start: Int, _ end: Int, reply: @escaping (Bool) -> Void) {
-        let range = PortRange(start: start, end: end)
+        // Validation stricte du range pour éviter DoS
+        guard let range = PortRange(start: start, end: end) else {
+            reply(false)
+            return
+        }
         startListeners(in: range, completion: reply)
     }
 
     func startListenersOnPorts(_ ports: [Int], reply: @escaping (Bool) -> Void) {
+        // Validation: limite le nombre de ports et vérifie chaque port
+        guard !ports.isEmpty && ports.count <= PortRange.maxPortsPerRange else {
+            reply(false)
+            return
+        }
+        guard ports.allSatisfy({ PortRange.isValidPort($0) }) else {
+            reply(false)
+            return
+        }
         startListenersOnPorts(ports, completion: reply)
     }
 
     func startUDPListenersOnPorts(_ ports: [Int], reply: @escaping (Bool) -> Void) {
+        // Validation: limite le nombre de ports et vérifie chaque port
+        guard !ports.isEmpty && ports.count <= PortRange.maxPortsPerRange else {
+            reply(false)
+            return
+        }
+        guard ports.allSatisfy({ PortRange.isValidPort($0) }) else {
+            reply(false)
+            return
+        }
         startUDPListenersOnPorts(ports, completion: reply)
     }
 
