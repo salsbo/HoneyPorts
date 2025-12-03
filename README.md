@@ -10,7 +10,9 @@ A lightweight macOS menu bar honeypot application that monitors network connecti
 
 ## Download / Téléchargement
 
-[Download HoneyPorts-1.0.dmg](https://github.com/salsbo/HoneyPorts/releases/download/v1.0/HoneyPorts-1.0.dmg) (Signed & Notarized by Apple)
+[Download HoneyPorts-1.2.dmg](https://github.com/salsbo/HoneyPorts/releases/download/v1.2/HoneyPorts-1.2.dmg) (Signed & Notarized by Apple)
+
+**v1.2** - Security update with vulnerability fixes / *Mise à jour de sécurité avec corrections de vulnérabilités*
 
 ## Security / Sécurité
 
@@ -45,7 +47,7 @@ A lightweight macOS menu bar honeypot application that monitors network connecti
 
 ## Installation
 
-1. Download `HoneyPorts-1.0.dmg` from [Releases](../../releases)
+1. Download `HoneyPorts-1.2.dmg` from [Releases](../../releases)
 2. Open the DMG and drag HoneyPorts to Applications
 3. Launch HoneyPorts from Applications
 
@@ -53,7 +55,7 @@ The app is signed and notarized by Apple for safe distribution.
 
 ---
 
-1. Téléchargez `HoneyPorts-1.0.dmg` depuis [Releases](../../releases)
+1. Téléchargez `HoneyPorts-1.2.dmg` depuis [Releases](../../releases)
 2. Ouvrez le DMG et glissez HoneyPorts dans Applications
 3. Lancez HoneyPorts depuis Applications
 
